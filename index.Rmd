@@ -1,0 +1,40 @@
+---
+title: "HAR - Machine Learning"
+subtitle: "Cousera Practical Machine Learning Project"
+author: "erickfis"
+date: "15 de julho de 2017"
+
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: true
+    self_contained: no
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, include = TRUE, 
+               warning = FALSE)
+
+
+```
+
+```{r child = 'intro.Rmd'}
+```
+
+```{r child = 'processamento.Rmd'}
+```
+
+```{r child = 'features.Rmd'}
+```
+
+
+```{r child = 'modelos.Rmd'}
+```
+
+```{r child = 'prediction.Rmd'}
+```
+
+```{r child = 'conclusions.Rmd'}
+```

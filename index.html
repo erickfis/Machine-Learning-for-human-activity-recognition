@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="erickfis" />
+
+
+<title>HAR - Machine Learning</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link rel="stylesheet" href="index_files/style.css" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<section class="page-header">
+<h1 class="title toc-ignore project-name">HAR - Machine Learning</h1>
+<h3 class="subtitle project-tagline">Cousera Practical Machine Learning Project</h3>
+<h4 class="author project-author">erickfis</h4>
+<h4 class="date project-date">15 de julho de 2017</h4>
+</section>
+
+
+<div id="TOC" class="toc">
+<ul>
+<li><a href="#summary">Summary</a></li>
+<li><a href="#data-processing-data-and-feature-selection">Data processing data and feature selection</a><ul>
+<li><a href="#features-by-choice">Features by choice</a></li>
+<li><a href="#features-by-variance">Features by variance</a></li>
+<li><a href="#features-by-correlation">Features by correlation</a></li>
+<li><a href="#features-plot">Features plot</a></li>
+</ul></li>
+<li><a href="#parallel-processing">Parallel processing</a></li>
+<li><a href="#cross-validation">Cross-validation</a></li>
+<li><a href="#model-selection">Model selection</a><ul>
+<li><a href="#cart-decision-trees">CART Decision Trees</a></li>
+<li><a href="#bootstrap-aggregating-bagging">Bootstrap aggregating (bagging)</a></li>
+<li><a href="#random-forests">Random Forests</a></li>
+<li><a href="#boosting-with-trees">Boosting with trees</a></li>
+</ul></li>
+<li><a href="#out-of-sample-error">Out of sample error</a></li>
+<li><a href="#prediction-on-test-set">Prediction on test set</a></li>
+<li><a href="#conclusion">Conclusion</a><ul>
+<li><a href="#model-selection-1">Model selection</a></li>
+<li><a href="#features-selection">Features Selection</a></li>
+<li><a href="#prediction-on-testing-set">Prediction on testing set</a></li>
+</ul></li>
+</ul>
+</div>
+
+<section class="main-content">
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<p>In this project our goal is to predict, through machine learning techniques, if a weight lifiting exercise is being done properly.</p>
+<p>We have data from accelerometers put on the belt, forearm, arm, and dumbbell of six young healthy participants who were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions:</p>
+<ul>
+<li>exactly according to the specification (Class A),</li>
+<li>throwing the elbows to the front (Class B),</li>
+<li>lifting the dumbbell only halfway (Class C),</li>
+<li>lowering the dumbbell only halfway (Class D)</li>
+<li>and throwing the hips to the front (Class E).</li>
+</ul>
+<p>Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.</p>
+<p>We described how we have built our model, how we used cross validation, what’s the expected out of sample error and why we made the choices we did.</p>
+<p>After building a machine learning algorithm, we will also use our prediction model to predict 20 different test cases. This prediction scored 100/100 on Coursera.</p>
+<p>The data for this project come from this source: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a>. They have been very generous in allowing their data to be used for this kind of assignment.</p>
+<p>Qualitative Activity Recognition of Weight Lifting Exercises dataset: Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human ’13). Stuttgart, Germany: ACM SIGCHI, 2013.</p>
+<p>Read more: <a href="http://groupware.les.inf.puc-rio.br/har#wle_paper_section#ixzz4nDBhFq9c" class="uri">http://groupware.les.inf.puc-rio.br/har#wle_paper_section#ixzz4nDBhFq9c</a></p>
+</div>
+<div id="data-processing-data-and-feature-selection" class="section level1">
+<h1>Data processing data and feature selection</h1>
+<div id="features-by-choice" class="section level2">
+<h2>Features by choice</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(data.table)
+<span class="kw">library</span>(rmarkdown)
+<span class="kw">library</span>(knitr)
+<span class="kw">library</span>(caret)
+dados &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dados/pml-training.csv&quot;</span>)
+
+dados.test &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;dados/pml-testing.csv&quot;</span>)
+all.features &lt;-<span class="st"> </span><span class="kw">names</span>(dados)</code></pre></div>
+<p>There are 160 different features.</p>
+<p>Features like <em>avg, total, roll, pitch and yaw</em> weren’t used in our model. Those are the pre-processed and new covariates created by the authors of the study, but they aren’t helpful for classification trees, as we saw on covariate creation classes.</p>
+<p>As we see it, this is a classification problem, so we chose classification trees methods.</p>
+<p>Thus, we decided to work with the raw data from accelerometers, magnets and gyroscopes.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># data from instruments</span>
+<span class="co"># loogking for accel, magnet and gyros between all the features</span>
+sel.features &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;^accel&quot;</span>, <span class="st">&quot;magnet&quot;</span>, <span class="st">&quot;gyros&quot;</span>)
+
+<span class="co"># getting selected features indexes</span>
+indice.sel.features &lt;-<span class="st"> </span><span class="kw">sapply</span>(sel.features, function(x) {
+        <span class="kw">grep</span>(x, all.features)
+        }
+)
+
+
+indice.sel.features &lt;-<span class="st"> </span><span class="kw">c</span>(indice.sel.features[,<span class="dv">1</span>],
+                         indice.sel.features[,<span class="dv">2</span>],
+                         indice.sel.features[,<span class="dv">3</span>])
+
+
+indice.sel.features &lt;-<span class="st"> </span><span class="kw">sort</span>(indice.sel.features)
+
+<span class="co"># subsetting for selected features</span>
+dados.instrumentos &lt;-<span class="st"> </span><span class="kw">subset</span>(dados, <span class="dt">select =</span> <span class="kw">c</span>(<span class="dv">160</span>, <span class="dv">6</span>:<span class="dv">7</span>,
+                                     indice.sel.features))
+
+
+<span class="co"># checking for NAs</span>
+nas &lt;-<span class="st"> </span><span class="kw">apply</span>(dados.instrumentos, <span class="dv">2</span>, function(x) <span class="kw">sum</span>(<span class="kw">is.na</span>(x)))
+
+
+<span class="co"># transform classe and window information on factors</span>
+dados.instrumentos$classe &lt;-<span class="st"> </span><span class="kw">as.factor</span>(dados.instrumentos$classe)
+dados.instrumentos$new_window &lt;-<span class="st"> </span><span class="kw">as.factor</span>(dados.instrumentos$new_window)
+
+<span class="co"># Data already computed</span>
+<span class="co"># indice &lt;- all.features[-indice.sel.features]</span>
+<span class="co"># dados.computed &lt;- subset(dados, select = c(indice))</span>
+<span class="co"># lista.na &lt;- apply(dados.computed, 2, function(x) sum(is.na(x)))</span>
+<span class="co"># lista.na[lista.na &gt; 19000]</span>
+<span class="co"># var.podres &lt;- names(lista.na[lista.na &gt; 19000])</span>
+<span class="co"># indice.var.podres &lt;- which(names(dados.computed) %in% var.podres)</span>
+<span class="co"># indice.var.podres</span>
+<span class="co"># dados.computed &lt;- subset(dados.computed, select = -indice.var.podres)</span>
+<span class="co"># dados.computed &lt;- dados.computed[,-c(1:5)]</span>
+<span class="co"># str(dados.computed)</span></code></pre></div>
+<p><strong>This decision reduces our modelling task from working with 160 to only 39 features</strong>.</p>
+<p>After this features elimination by choice, lets use variance and correlation analysis to filter even more features, because unnecessary features would only increase variance.</p>
+</div>
+<div id="features-by-variance" class="section level2">
+<h2>Features by variance</h2>
+<p>Caret’s function <strong>nearZeroVar()</strong> diagnoses predictors that have one unique value (i.e. are zero variance predictors) or predictors that are have both of the following characteristics: they have very few unique values relative to the number of samples and the ratio of the frequency of the most common value to the frequency of the second most common value is large.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">near.z.index &lt;-<span class="st"> </span><span class="kw">nearZeroVar</span>(dados.instrumentos)
+remove.f &lt;-<span class="st"> </span><span class="kw">names</span>(dados.instrumentos)[near.z.index]
+dados.instrumentos &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, 
+                             <span class="dt">select =</span> -near.z.index)</code></pre></div>
+<p>Variance analysis tells us to remove the new_window feature.</p>
+<p><strong>Now we have narrowed our model to only 38 good features</strong>.</p>
+</div>
+<div id="features-by-correlation" class="section level2">
+<h2>Features by correlation</h2>
+<p>Caret’s <strong>findCorrelation()</strong> searches through a correlation matrix and returns a vector of integers corresponding to columns to remove to reduce pair-wise correlations.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">corrs &lt;-<span class="st"> </span><span class="kw">cor</span>(dados.instrumentos[,<span class="dv">2</span>:<span class="dv">38</span>])
+<span class="co"># corrplot(corrs, method = &quot;shade&quot;,type = &quot;lower&quot;)</span>
+
+rmv.cor &lt;-<span class="st"> </span><span class="kw">findCorrelation</span>(corrs)
+<span class="co"># names(dados.instrumentos)[rmv.cor]</span>
+<span class="co"># cor(dados.instrumentos[,c(7,31,22,11)])</span>
+remove.f &lt;-<span class="st"> </span><span class="kw">names</span>(dados.instrumentos)[rmv.cor]
+
+dados.instrumentos &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, 
+                             <span class="dt">select =</span> -rmv.cor)</code></pre></div>
+<p>Correlation analysis tells us to remove the accel_belt_y, gyros_forearm_y, gyros_dumbbell_y, magnet_belt_z features.</p>
+<p><strong>Now we have narrowed our model to only 34 good features</strong>.</p>
+</div>
+<div id="features-plot" class="section level2">
+<h2>Features plot</h2>
+<p>Since there are sensors located in belt, arm, forearm and dumbbell, lets see how sensors correlate to class for each location.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">index &lt;-<span class="st"> </span><span class="kw">grep</span>(<span class="st">&quot;belt&quot;</span>, <span class="kw">names</span>(dados.instrumentos))
+
+located.df &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, <span class="dt">select =</span> index)
+
+
+<span class="kw">featurePlot</span>(<span class="dt">x =</span> located.df, <span class="dt">y =</span> dados.instrumentos$classe, 
+            <span class="dt">main =</span> <span class="st">&quot;Belt Sensors&quot;</span>, <span class="dt">plot =</span> <span class="st">&quot;pairs&quot;</span>,
+            <span class="dt">auto.key =</span> <span class="kw">list</span>(<span class="dt">columns =</span> <span class="dv">5</span>))</code></pre></div>
+<p><img src="index_files/figure-html/belt-plots-1.png" /><!-- --></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">index &lt;-<span class="st"> </span><span class="kw">grep</span>(<span class="st">&quot;_arm&quot;</span>, <span class="kw">names</span>(dados.instrumentos))
+
+located.df &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, <span class="dt">select =</span> index)
+
+
+<span class="kw">featurePlot</span>(<span class="dt">x =</span> located.df, <span class="dt">y =</span> dados.instrumentos$classe, 
+            <span class="dt">main =</span> <span class="st">&quot;Arm Sensors&quot;</span>, <span class="dt">plot =</span> <span class="st">&quot;pairs&quot;</span>,
+            <span class="dt">auto.key =</span> <span class="kw">list</span>(<span class="dt">columns =</span> <span class="dv">5</span>))</code></pre></div>
+<p><img src="index_files/figure-html/arm-plots-1.png" /><!-- --></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">index &lt;-<span class="st"> </span><span class="kw">grep</span>(<span class="st">&quot;fore&quot;</span>, <span class="kw">names</span>(dados.instrumentos))
+
+located.df &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, <span class="dt">select =</span> index)
+
+
+<span class="kw">featurePlot</span>(<span class="dt">x =</span> located.df, <span class="dt">y =</span> dados.instrumentos$classe, 
+            <span class="dt">main =</span> <span class="st">&quot;Forearm Sensors&quot;</span>, <span class="dt">plot =</span> <span class="st">&quot;pairs&quot;</span>,
+            <span class="dt">auto.key =</span> <span class="kw">list</span>(<span class="dt">columns =</span> <span class="dv">5</span>))</code></pre></div>
+<p><img src="index_files/figure-html/forearm-plots-1.png" /><!-- --></p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">index &lt;-<span class="st"> </span><span class="kw">grep</span>(<span class="st">&quot;dumbbell&quot;</span>, <span class="kw">names</span>(dados.instrumentos))
+
+located.df &lt;-<span class="st"> </span><span class="kw">subset</span>(dados.instrumentos, <span class="dt">select =</span> index)
+
+
+<span class="kw">featurePlot</span>(<span class="dt">x =</span> located.df, <span class="dt">y =</span> dados.instrumentos$classe, 
+            <span class="dt">main =</span> <span class="st">&quot;Dumbbell Sensors&quot;</span>, <span class="dt">plot =</span> <span class="st">&quot;pairs&quot;</span>,
+            <span class="dt">auto.key =</span> <span class="kw">list</span>(<span class="dt">columns =</span> <span class="dv">5</span>))</code></pre></div>
+<p><img src="index_files/figure-html/dumbbell-plots-1.png" /><!-- --></p>
+</div>
+</div>
+<div id="parallel-processing" class="section level1">
+<h1>Parallel processing</h1>
+<p>From library documentation,</p>
+<p>the function <strong>registerDoParallel()</strong> provides functions for parallel execution of R code on machines with multiple cores or processors or multiple computers. It is essentially a blend of the snow and multicore packages. By default, the doParallel package uses snow-like functionality.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(parallel)
+<span class="kw">library</span>(doParallel)
+
+cluster &lt;-<span class="st"> </span><span class="kw">makeCluster</span>(<span class="kw">detectCores</span>() -<span class="st"> </span><span class="dv">1</span>) <span class="co"># convention to leave 1 core for OS</span>
+<span class="kw">registerDoParallel</span>(cluster)
+
+fitControl &lt;-<span class="st"> </span><span class="kw">trainControl</span>(<span class="dt">method =</span> <span class="st">&quot;cv&quot;</span>,
+                           <span class="dt">number =</span> <span class="dv">3</span>,
+                           <span class="dt">allowParallel =</span> <span class="ot">TRUE</span>)</code></pre></div>
+</div>
+<div id="cross-validation" class="section level1">
+<h1>Cross-validation</h1>
+<p>To get a measure of accuracy and for validating our model, we have split the training data in two subsets: training, containing 70% of the data, and crossval, containing the other 30%.</p>
+<p>Cross-validation is done while training our models through trainControl parameters, where we specify we want the train data split in 3 parts for cross-validation.</p>
+<p>Also, crossval data is used after the model is built to measure its accuracy.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># hold out a piece of train data, for CV</span>
+indice.train &lt;-<span class="st"> </span><span class="kw">createDataPartition</span>(dados.instrumentos$classe, 
+                                    <span class="dt">p =</span><span class="fl">0.7</span>, <span class="dt">list =</span> <span class="ot">FALSE</span>)
+
+training &lt;-<span class="st"> </span>dados.instrumentos[indice.train,]
+crossval &lt;-<span class="st"> </span>dados.instrumentos[-indice.train,]</code></pre></div>
+</div>
+<div id="model-selection" class="section level1">
+<h1>Model selection</h1>
+<p>As we see it, this is a classification problem, so we choose between classification models.</p>
+<p>We compared some different models and then chose the best of them in terms of accuracy.</p>
+<p>Here we present different models, its accuracy and the system time needed to train each one.</p>
+<div id="cart-decision-trees" class="section level2">
+<h2>CART Decision Trees</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#training the model</span>
+tempo.cart &lt;-<span class="st"> </span><span class="kw">system.time</span>({
+modelo.cart &lt;-<span class="st"> </span><span class="kw">train</span>(classe ~., training, <span class="dt">method =</span> <span class="st">&quot;rpart&quot;</span>, 
+                    <span class="dt">trControl =</span> fitControl)
+})
+
+<span class="co"># getting cross-validated accuraccy</span>
+valores &lt;-<span class="st"> </span><span class="kw">predict</span>(modelo.cart, crossval)
+acc &lt;-<span class="st"> </span><span class="kw">confusionMatrix</span>(crossval$classe, valores)
+
+<span class="co"># table for showing proccessing time</span>
+tempo.table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(tempo.cart[<span class="dv">1</span>],tempo.cart[<span class="dv">2</span>],tempo.cart[<span class="dv">3</span>])
+<span class="kw">names</span>(tempo.table) &lt;-<span class="st"> </span><span class="kw">names</span>(tempo.cart)[<span class="dv">1</span>:<span class="dv">3</span>]
+tempo.table &lt;-<span class="st"> </span><span class="kw">round</span>(tempo.table,<span class="dv">2</span>)
+<span class="kw">kable</span>(tempo.table, <span class="dt">caption =</span> <span class="st">&quot;time in seconds&quot;</span>)</code></pre></div>
+<table>
+<caption>time in seconds</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">user.self</th>
+<th align="right">sys.self</th>
+<th align="right">elapsed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>user.self</td>
+<td align="right">4.28</td>
+<td align="right">0.03</td>
+<td align="right">8.08</td>
+</tr>
+</tbody>
+</table>
+<p>This model has accuracy of 0.369. That’s not what we need.</p>
+</div>
+<div id="bootstrap-aggregating-bagging" class="section level2">
+<h2>Bootstrap aggregating (bagging)</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#training the model and benchmarking the proccess</span>
+
+tempo.bag &lt;-<span class="st"> </span><span class="kw">system.time</span>({
+        
+modelo.bag &lt;-<span class="st"> </span><span class="kw">train</span>(classe ~., training, <span class="dt">method =</span> <span class="st">&quot;treebag&quot;</span>, 
+                    <span class="dt">trControl =</span> fitControl)
+})
+
+<span class="kw">stopCluster</span>(cluster)
+<span class="kw">registerDoSEQ</span>()
+
+<span class="co"># getting cross-validated accuraccy</span>
+valores &lt;-<span class="st"> </span><span class="kw">predict</span>(modelo.bag, crossval)
+acc.bag &lt;-<span class="st"> </span><span class="kw">confusionMatrix</span>(crossval$classe, valores)
+
+<span class="co"># table for showing proccessing time</span>
+tempo.table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(tempo.bag[<span class="dv">1</span>],tempo.bag[<span class="dv">2</span>],tempo.bag[<span class="dv">3</span>])
+<span class="kw">names</span>(tempo.table) &lt;-<span class="st"> </span><span class="kw">names</span>(tempo.bag)[<span class="dv">1</span>:<span class="dv">3</span>]
+tempo.table &lt;-<span class="st"> </span><span class="kw">round</span>(tempo.table,<span class="dv">2</span>)
+<span class="kw">kable</span>(tempo.table, <span class="dt">caption =</span> <span class="st">&quot;time in seconds&quot;</span>)</code></pre></div>
+<table>
+<caption>time in seconds</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">user.self</th>
+<th align="right">sys.self</th>
+<th align="right">elapsed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>user.self</td>
+<td align="right">13.5</td>
+<td align="right">0.04</td>
+<td align="right">29.22</td>
+</tr>
+</tbody>
+</table>
+<p>This model has accuracy of 0.995. That’s really impressive.</p>
+<p>Due to its high accuracy and low computing time, <strong>this is the choosen model.</strong></p>
+</div>
+<div id="random-forests" class="section level2">
+<h2>Random Forests</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># currently disabled to save processing time</span>
+<span class="co"># previus data is show here</span>
+
+<span class="co">#training the model and benchmarking the proccess</span>
+<span class="co"># tempo.rf &lt;- system.time({</span>
+<span class="co">#         </span>
+<span class="co"># modelo.rf &lt;- train(classe ~., training, method = &quot;rf&quot;, </span>
+<span class="co">#                     trControl = fitControl)</span>
+<span class="co"># })</span>
+<span class="co"># </span>
+<span class="co"># # getting cross-validated accuraccy</span>
+<span class="co"># valores &lt;- predict(modelo.rf, crossval)</span>
+<span class="co"># acc &lt;- confusionMatrix(crossval$classe, valores)</span>
+
+<span class="co"># table for showing proccessing time</span>
+<span class="co"># tempo.table &lt;- data.frame(tempo.rf[1],tempo.rf[2],tempo.rf[3])</span>
+<span class="co"># names(tempo.table) &lt;- names(tempo.rf)[1:3]</span>
+<span class="co"># tempo.table &lt;- round(tempo.table,2)</span>
+
+<span class="co"># recorded data</span>
+tempo.table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="fl">36.83</span>, <span class="fl">0.2</span>, <span class="fl">188.79</span>)
+<span class="kw">names</span>(tempo.table) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;user&quot;</span>, <span class="st">&quot;sys&quot;</span>, <span class="st">&quot;elapsed&quot;</span>)
+
+<span class="kw">kable</span>(tempo.table, <span class="dt">caption =</span> <span class="st">&quot;time in seconds&quot;</span>)</code></pre></div>
+<table>
+<caption>time in seconds</caption>
+<thead>
+<tr class="header">
+<th align="right">user</th>
+<th align="right">sys</th>
+<th align="right">elapsed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">36.83</td>
+<td align="right">0.2</td>
+<td align="right">188.79</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">overall &lt;-<span class="st"> </span><span class="fl">0.996</span>
+acc &lt;-<span class="st"> </span><span class="kw">data.frame</span>(overall)</code></pre></div>
+<p>This model has accuracy of 0.996. That’s really impressive.</p>
+</div>
+<div id="boosting-with-trees" class="section level2">
+<h2>Boosting with trees</h2>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># currently disabled to save processing time</span>
+<span class="co"># previus data is show here</span>
+<span class="co"># </span>
+<span class="co"># gbmGrid &lt;-  expand.grid(interaction.depth = c(2,3), </span>
+<span class="co">#                         n.trees = seq(1,501,20),</span>
+<span class="co">#                         shrinkage = 0.1,</span>
+<span class="co">#                         n.minobsinnode = 40)</span>
+<span class="co"># </span>
+<span class="co"># #training the model and benchmarking the proccess</span>
+<span class="co"># tempo.gbm &lt;- system.time({</span>
+<span class="co">#         </span>
+<span class="co"># modelo.gbm &lt;- train(classe ~., training, method = &quot;gbm&quot;, </span>
+<span class="co">#                     trControl = fitControl, </span>
+<span class="co">#                     tuneGrid = gbmGrid)</span>
+<span class="co"># })</span>
+
+<span class="co"># stopCluster(cluster)</span>
+<span class="co"># registerDoSEQ()</span>
+
+
+
+<span class="co"># getting cross-validated accuraccy</span>
+<span class="co"># valores &lt;- predict(modelo.gbm, crossval)</span>
+<span class="co"># acc &lt;- confusionMatrix(crossval$classe, valores)</span>
+<span class="co"># </span>
+<span class="co"># # table for showing proccessing time</span>
+<span class="co"># tempo.table &lt;- data.frame(tempo.gbm[1],tempo.gbm[2],tempo.gbm[3])</span>
+<span class="co"># names(tempo.table) &lt;- names(tempo.gbm)[1:3]</span>
+<span class="co"># tempo.table &lt;- round(tempo.table,2)</span>
+
+<span class="co"># recorded data</span>
+tempo.table &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="fl">94.54</span>, <span class="fl">0.91</span>, <span class="fl">289.75</span>)
+<span class="kw">names</span>(tempo.table) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;user&quot;</span>, <span class="st">&quot;sys&quot;</span>, <span class="st">&quot;elapsed&quot;</span>)
+
+<span class="kw">kable</span>(tempo.table, <span class="dt">caption =</span> <span class="st">&quot;time in seconds&quot;</span>)</code></pre></div>
+<table>
+<caption>time in seconds</caption>
+<thead>
+<tr class="header">
+<th align="right">user</th>
+<th align="right">sys</th>
+<th align="right">elapsed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">94.54</td>
+<td align="right">0.91</td>
+<td align="right">289.75</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">overall &lt;-<span class="st"> </span><span class="fl">0.999</span>
+acc &lt;-<span class="st"> </span><span class="kw">data.frame</span>(overall)</code></pre></div>
+<p>This model has accuracy of 0.999. That’s really impressive.</p>
+</div>
+</div>
+<div id="out-of-sample-error" class="section level1">
+<h1>Out of sample error</h1>
+<p>Since bagging is as accurate as the more computational expensive models, lets give it a closer look:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">acc.bag</code></pre></div>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1674    0    0    0    0
+##          B    4 1129    5    0    1
+##          C    1    7 1018    0    0
+##          D    0    0    8  955    1
+##          E    0    1    1    2 1078
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9947          
+##                  95% CI : (0.9925, 0.9964)
+##     No Information Rate : 0.2853          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9933          
+##  Mcnemar&#39;s Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9970   0.9930   0.9864   0.9979   0.9981
+## Specificity            1.0000   0.9979   0.9984   0.9982   0.9992
+## Pos Pred Value         1.0000   0.9912   0.9922   0.9907   0.9963
+## Neg Pred Value         0.9988   0.9983   0.9971   0.9996   0.9996
+## Prevalence             0.2853   0.1932   0.1754   0.1626   0.1835
+## Detection Rate         0.2845   0.1918   0.1730   0.1623   0.1832
+## Detection Prevalence   0.2845   0.1935   0.1743   0.1638   0.1839
+## Balanced Accuracy      0.9985   0.9954   0.9924   0.9980   0.9987</code></pre>
+<p>The out-of-sample error is:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">oose &lt;-<span class="st"> </span><span class="dv">1</span>-acc.bag$overall[<span class="dv">1</span>]
+<span class="kw">names</span>(oose) &lt;-<span class="st"> &quot;oose&quot;</span>
+<span class="kw">round</span>(oose,<span class="dv">3</span>)</code></pre></div>
+<pre><code>##  oose 
+## 0.005</code></pre>
+</div>
+<div id="prediction-on-test-set" class="section level1">
+<h1>Prediction on test set</h1>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dados.test$new_window &lt;-<span class="st"> </span><span class="kw">as.factor</span>(dados.test$new_window)
+
+valores &lt;-<span class="st"> </span><span class="kw">predict</span>(modelo.bag, dados.test)
+
+resultados &lt;-<span class="st"> </span><span class="kw">data.table</span>(dados.test$V1, dados.test$user_name,
+                         valores)
+
+<span class="kw">names</span>(resultados) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;id&quot;</span>, <span class="st">&quot;name&quot;</span>, <span class="st">&quot;Pred. Class&quot;</span>)
+
+<span class="kw">kable</span>(resultados, <span class="dt">caption=</span><span class="st">&quot;Prediction results&quot;</span>)</code></pre></div>
+<table>
+<caption>Prediction results</caption>
+<thead>
+<tr class="header">
+<th align="left">id</th>
+<th align="left">name</th>
+<th align="left">Pred. Class</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">pedro</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">jeremy</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">jeremy</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">adelmo</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">eurico</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">jeremy</td>
+<td align="left">E</td>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="left">jeremy</td>
+<td align="left">D</td>
+</tr>
+<tr class="even">
+<td align="left">8</td>
+<td align="left">jeremy</td>
+<td align="left">B</td>
+</tr>
+<tr class="odd">
+<td align="left">9</td>
+<td align="left">carlitos</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="left">charles</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">11</td>
+<td align="left">carlitos</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">12</td>
+<td align="left">jeremy</td>
+<td align="left">C</td>
+</tr>
+<tr class="odd">
+<td align="left">13</td>
+<td align="left">eurico</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">14</td>
+<td align="left">jeremy</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">15</td>
+<td align="left">jeremy</td>
+<td align="left">E</td>
+</tr>
+<tr class="even">
+<td align="left">16</td>
+<td align="left">eurico</td>
+<td align="left">E</td>
+</tr>
+<tr class="odd">
+<td align="left">17</td>
+<td align="left">pedro</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">18</td>
+<td align="left">carlitos</td>
+<td align="left">B</td>
+</tr>
+<tr class="odd">
+<td align="left">19</td>
+<td align="left">pedro</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">20</td>
+<td align="left">eurico</td>
+<td align="left">B</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<div id="model-selection-1" class="section level2">
+<h2>Model selection</h2>
+<p>As we see it, this is a classification problem, so we choose between classification models.</p>
+<p>Among them, we have found that <em>bootstrap aggregating (bagging)</em> is an absolute winner because</p>
+<ul>
+<li>it has a hight accuracy (0.995)</li>
+<li>gets done really fast, in just 29.22 seconds.</li>
+</ul>
+<p>That’s almost 6 times less computing time than random forests and almost 10 times less than boosting with trees.</p>
+</div>
+<div id="features-selection" class="section level2">
+<h2>Features Selection</h2>
+<p>Features like avg, total, roll, pitch and yaw are the pre-processed and new covariates created by the authors of the study, but they aren’t helpful for classification trees as this method benefits more from raw data.</p>
+<p>Because this is a classification problem and we worked with classification trees, pre-processed and new covariates aren’t helpful, so <strong>we decided to work with the raw data from accelerometers, magnets and gyroscopes</strong>.</p>
+<p>Also, using correlation and variance analysis, we have narrowed our modelling task from 160 to only 34 features.</p>
+</div>
+<div id="prediction-on-testing-set" class="section level2">
+<h2>Prediction on testing set</h2>
+<p>Those are the final results:</p>
+<table>
+<caption>Prediction results</caption>
+<thead>
+<tr class="header">
+<th align="left">id</th>
+<th align="left">name</th>
+<th align="left">Pred. Class</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">pedro</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">jeremy</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">jeremy</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">adelmo</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="left">eurico</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="left">jeremy</td>
+<td align="left">E</td>
+</tr>
+<tr class="odd">
+<td align="left">7</td>
+<td align="left">jeremy</td>
+<td align="left">D</td>
+</tr>
+<tr class="even">
+<td align="left">8</td>
+<td align="left">jeremy</td>
+<td align="left">B</td>
+</tr>
+<tr class="odd">
+<td align="left">9</td>
+<td align="left">carlitos</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">10</td>
+<td align="left">charles</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">11</td>
+<td align="left">carlitos</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">12</td>
+<td align="left">jeremy</td>
+<td align="left">C</td>
+</tr>
+<tr class="odd">
+<td align="left">13</td>
+<td align="left">eurico</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">14</td>
+<td align="left">jeremy</td>
+<td align="left">A</td>
+</tr>
+<tr class="odd">
+<td align="left">15</td>
+<td align="left">jeremy</td>
+<td align="left">E</td>
+</tr>
+<tr class="even">
+<td align="left">16</td>
+<td align="left">eurico</td>
+<td align="left">E</td>
+</tr>
+<tr class="odd">
+<td align="left">17</td>
+<td align="left">pedro</td>
+<td align="left">A</td>
+</tr>
+<tr class="even">
+<td align="left">18</td>
+<td align="left">carlitos</td>
+<td align="left">B</td>
+</tr>
+<tr class="odd">
+<td align="left">19</td>
+<td align="left">pedro</td>
+<td align="left">B</td>
+</tr>
+<tr class="even">
+<td align="left">20</td>
+<td align="left">eurico</td>
+<td align="left">B</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

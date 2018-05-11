@@ -1,0 +1,16 @@
+# Prediction on test set
+
+```{r prediction, cache=TRUE}
+
+dados.test$new_window <- as.factor(dados.test$new_window)
+
+valores <- predict(modelo.bag, dados.test)
+
+resultados <- data.table(dados.test$V1, dados.test$user_name,
+                         valores)
+
+names(resultados) <- c("id", "name", "Pred. Class")
+
+kable(resultados, caption="Prediction results")
+```
+

@@ -1,0 +1,204 @@
+# Parallel processing
+
+From library documentation,
+
+the function **registerDoParallel()**
+provides functions for parallel execution of R code on machines with multiple cores or processors or multiple computers. It is essentially a blend of the snow and multicore packages. By default, the doParallel package uses snow-like functionality.
+
+```{r}
+library(parallel)
+library(doParallel)
+
+cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+registerDoParallel(cluster)
+
+fitControl <- trainControl(method = "cv",
+                           number = 3,
+                           allowParallel = TRUE)
+```
+
+# Cross-validation
+
+To get a measure of accuracy and for validating our model,
+we have split the training data in two subsets: training, containing 70% of the data, and crossval, containing the other 30%.
+
+
+Cross-validation is done while training our models through trainControl parameters, where we specify we want the train data split in 3 parts for cross-validation.
+
+Also, crossval data is used after the model is built to measure its accuracy.
+
+
+```{r}
+# hold out a piece of train data, for CV
+indice.train <- createDataPartition(dados.instrumentos$classe, 
+                                    p =0.7, list = FALSE)
+
+training <- dados.instrumentos[indice.train,]
+crossval <- dados.instrumentos[-indice.train,]
+```
+
+# Model selection
+
+As we see it, this is a classification problem, so we choose between classification models.
+
+We compared some different models and then chose the best of them in terms of accuracy.
+
+Here we present different models, its accuracy and the system time needed to train each one.
+
+
+## CART Decision Trees
+
+```{r cart, cache=TRUE}
+#training the model
+tempo.cart <- system.time({
+modelo.cart <- train(classe ~., training, method = "rpart", 
+                    trControl = fitControl)
+})
+
+# getting cross-validated accuraccy
+valores <- predict(modelo.cart, crossval)
+acc <- confusionMatrix(crossval$classe, valores)
+
+# table for showing proccessing time
+tempo.table <- data.frame(tempo.cart[1],tempo.cart[2],tempo.cart[3])
+names(tempo.table) <- names(tempo.cart)[1:3]
+tempo.table <- round(tempo.table,2)
+kable(tempo.table, caption = "time in seconds")
+
+```
+
+This model has accuracy of `r round(acc$overall[1],3)`. That's not what we need.
+
+
+## Bootstrap aggregating (bagging)
+
+```{r bagging, cache=TRUE}
+#training the model and benchmarking the proccess
+
+tempo.bag <- system.time({
+        
+modelo.bag <- train(classe ~., training, method = "treebag", 
+                    trControl = fitControl)
+})
+
+stopCluster(cluster)
+registerDoSEQ()
+
+# getting cross-validated accuraccy
+valores <- predict(modelo.bag, crossval)
+acc.bag <- confusionMatrix(crossval$classe, valores)
+
+# table for showing proccessing time
+tempo.table <- data.frame(tempo.bag[1],tempo.bag[2],tempo.bag[3])
+names(tempo.table) <- names(tempo.bag)[1:3]
+tempo.table <- round(tempo.table,2)
+kable(tempo.table, caption = "time in seconds")
+
+```
+
+This model has accuracy of `r round(acc.bag$overall[1],3)`. That's really impressive.
+
+Due to its high accuracy and low computing time, **this is the choosen model.**
+
+
+
+## Random Forests
+
+```{r rforests, cache=TRUE}
+# currently disabled to save processing time
+# previus data is show here
+
+#training the model and benchmarking the proccess
+# tempo.rf <- system.time({
+#         
+# modelo.rf <- train(classe ~., training, method = "rf", 
+#                     trControl = fitControl)
+# })
+# 
+# # getting cross-validated accuraccy
+# valores <- predict(modelo.rf, crossval)
+# acc <- confusionMatrix(crossval$classe, valores)
+
+# table for showing proccessing time
+# tempo.table <- data.frame(tempo.rf[1],tempo.rf[2],tempo.rf[3])
+# names(tempo.table) <- names(tempo.rf)[1:3]
+# tempo.table <- round(tempo.table,2)
+
+# recorded data
+tempo.table <- data.frame(36.83, 0.2, 188.79)
+names(tempo.table) <- c("user", "sys", "elapsed")
+
+kable(tempo.table, caption = "time in seconds")
+
+
+overall <- 0.996
+acc <- data.frame(overall)
+```
+
+This model has accuracy of `r round(acc$overall[1],3)`. That's really impressive.
+
+
+## Boosting with trees
+
+```{r gbm, cache=TRUE}
+
+# currently disabled to save processing time
+# previus data is show here
+# 
+# gbmGrid <-  expand.grid(interaction.depth = c(2,3), 
+#                         n.trees = seq(1,501,20),
+#                         shrinkage = 0.1,
+#                         n.minobsinnode = 40)
+# 
+# #training the model and benchmarking the proccess
+# tempo.gbm <- system.time({
+#         
+# modelo.gbm <- train(classe ~., training, method = "gbm", 
+#                     trControl = fitControl, 
+#                     tuneGrid = gbmGrid)
+# })
+
+# stopCluster(cluster)
+# registerDoSEQ()
+
+
+
+# getting cross-validated accuraccy
+# valores <- predict(modelo.gbm, crossval)
+# acc <- confusionMatrix(crossval$classe, valores)
+# 
+# # table for showing proccessing time
+# tempo.table <- data.frame(tempo.gbm[1],tempo.gbm[2],tempo.gbm[3])
+# names(tempo.table) <- names(tempo.gbm)[1:3]
+# tempo.table <- round(tempo.table,2)
+
+# recorded data
+tempo.table <- data.frame(94.54, 0.91, 289.75)
+names(tempo.table) <- c("user", "sys", "elapsed")
+
+kable(tempo.table, caption = "time in seconds")
+
+overall <- 0.999
+acc <- data.frame(overall)
+
+```
+
+This model has accuracy of `r round(acc$overall[1],3)`. That's really impressive.
+
+
+# Out of sample error
+
+Since bagging is as accurate as the more computational expensive  models, lets give it a closer look:
+
+```{r confusM}
+acc.bag
+```
+
+The out-of-sample error is:
+
+```{r oose}
+oose <- 1-acc.bag$overall[1]
+names(oose) <- "oose"
+round(oose,3)
+```
+

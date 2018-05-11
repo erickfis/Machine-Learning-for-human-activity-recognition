@@ -1,0 +1,57 @@
+
+## Features plot
+
+Since there are sensors located in belt, arm, forearm and dumbbell, lets see how sensors correlate to class for each location.
+
+```{r belt-plots, cache=TRUE, fig.height=7, fig.width=7}
+
+index <- grep("belt", names(dados.instrumentos))
+
+located.df <- subset(dados.instrumentos, select = index)
+
+
+featurePlot(x = located.df, y = dados.instrumentos$classe, 
+            main = "Belt Sensors", plot = "pairs",
+            auto.key = list(columns = 5))
+
+            
+```
+```{r arm-plots, cache=TRUE, fig.height=7, fig.width=7}
+
+index <- grep("_arm", names(dados.instrumentos))
+
+located.df <- subset(dados.instrumentos, select = index)
+
+
+featurePlot(x = located.df, y = dados.instrumentos$classe, 
+            main = "Arm Sensors", plot = "pairs",
+            auto.key = list(columns = 5))
+
+```
+
+```{r forearm-plots, cache=TRUE, fig.height=7, fig.width=7}
+
+index <- grep("fore", names(dados.instrumentos))
+
+located.df <- subset(dados.instrumentos, select = index)
+
+
+featurePlot(x = located.df, y = dados.instrumentos$classe, 
+            main = "Forearm Sensors", plot = "pairs",
+            auto.key = list(columns = 5))
+
+
+```
+
+```{r dumbbell-plots, cache=TRUE, fig.height=7, fig.width=7}
+
+index <- grep("dumbbell", names(dados.instrumentos))
+
+located.df <- subset(dados.instrumentos, select = index)
+
+
+featurePlot(x = located.df, y = dados.instrumentos$classe, 
+            main = "Dumbbell Sensors", plot = "pairs",
+            auto.key = list(columns = 5))
+
+```

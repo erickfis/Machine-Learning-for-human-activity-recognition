@@ -1,0 +1,118 @@
+# Data processing data and feature selection
+
+## Features by choice
+
+
+```{r}
+library(data.table)
+library(rmarkdown)
+library(knitr)
+library(caret)
+dados <- fread("dados/pml-training.csv")
+
+dados.test <- fread("dados/pml-testing.csv")
+all.features <- names(dados)
+```
+
+There are `r length(all.features)` different features.
+
+Features like *avg, total, roll, pitch and yaw* weren't used in our model. Those are the pre-processed and new covariates created by the authors of the study, but they aren't helpful for classification trees, as we saw on covariate creation classes.
+
+As we see it, this is a classification problem, so we chose classification trees methods.
+
+Thus, we decided to work with the raw data from accelerometers, magnets and gyroscopes.
+
+
+```{r pre-proc, cache=TRUE}
+# data from instruments
+# loogking for accel, magnet and gyros between all the features
+sel.features <- c("^accel", "magnet", "gyros")
+
+# getting selected features indexes
+indice.sel.features <- sapply(sel.features, function(x) {
+        grep(x, all.features)
+        }
+)
+
+
+indice.sel.features <- c(indice.sel.features[,1],
+                         indice.sel.features[,2],
+                         indice.sel.features[,3])
+
+
+indice.sel.features <- sort(indice.sel.features)
+
+# subsetting for selected features
+dados.instrumentos <- subset(dados, select = c(160, 6:7,
+                                     indice.sel.features))
+
+
+# checking for NAs
+nas <- apply(dados.instrumentos, 2, function(x) sum(is.na(x)))
+
+
+# transform classe and window information on factors
+dados.instrumentos$classe <- as.factor(dados.instrumentos$classe)
+dados.instrumentos$new_window <- as.factor(dados.instrumentos$new_window)
+
+# Data already computed
+# indice <- all.features[-indice.sel.features]
+# dados.computed <- subset(dados, select = c(indice))
+# lista.na <- apply(dados.computed, 2, function(x) sum(is.na(x)))
+# lista.na[lista.na > 19000]
+# var.podres <- names(lista.na[lista.na > 19000])
+# indice.var.podres <- which(names(dados.computed) %in% var.podres)
+# indice.var.podres
+# dados.computed <- subset(dados.computed, select = -indice.var.podres)
+# dados.computed <- dados.computed[,-c(1:5)]
+# str(dados.computed)
+
+
+```
+
+**This decision reduces our modelling task from working with `r dim(dados)[2]` to only `r dim(dados.instrumentos)[2]` features**.
+
+
+
+After this features elimination by choice,
+lets use variance and correlation analysis to filter even more features, because unnecessary features would only increase variance.
+
+## Features by variance
+
+Caret's function **nearZeroVar()**  diagnoses predictors that have one unique value (i.e. are zero variance predictors) or predictors that are have both of the following characteristics: they have very few unique values relative to the number of samples and the ratio of the frequency of the most common value to the frequency of the second most common value is large.
+
+```{r zero, cache=TRUE}
+near.z.index <- nearZeroVar(dados.instrumentos)
+remove.f <- names(dados.instrumentos)[near.z.index]
+dados.instrumentos <- subset(dados.instrumentos, 
+                             select = -near.z.index)
+
+```
+
+Variance analysis tells us to remove the `r remove.f` feature.
+
+**Now we have narrowed our model to only `r dim(dados.instrumentos)[2]` good features**.
+
+## Features by correlation
+
+Caret's **findCorrelation()** searches through a correlation matrix and returns a vector of integers corresponding to columns to remove to reduce pair-wise correlations.
+
+
+```{r}
+corrs <- cor(dados.instrumentos[,2:38])
+# corrplot(corrs, method = "shade",type = "lower")
+
+rmv.cor <- findCorrelation(corrs)
+# names(dados.instrumentos)[rmv.cor]
+# cor(dados.instrumentos[,c(7,31,22,11)])
+remove.f <- names(dados.instrumentos)[rmv.cor]
+
+dados.instrumentos <- subset(dados.instrumentos, 
+                             select = -rmv.cor)
+
+```
+
+Correlation analysis tells us to remove the `r remove.f` features.
+
+
+**Now we have narrowed our model to only `r dim(dados.instrumentos)[2]` good features**.

@@ -1,0 +1,36 @@
+# Conclusion
+
+## Model selection
+
+As we see it, this is a classification problem, so we choose between classification models.
+
+
+Among them, we have found that *bootstrap aggregating (bagging)* is an absolute winner because
+
+- it has a hight accuracy (`r round(acc.bag$overall[1],3)`) 
+- gets done really fast, in just `r round(tempo.bag[3],2)` seconds. 
+
+That's almost 6 times less computing time than random forests and almost 10 times less than boosting with trees.
+
+
+## Features Selection
+
+Features like avg, total, roll, pitch and yaw are the pre-processed and new covariates created by the authors of the study, but they aren't helpful for classification trees as this method benefits more from raw data.
+
+Because this is a classification problem and we worked with classification trees, pre-processed and new covariates aren't helpful, so **we decided to work with the raw data from accelerometers, magnets and gyroscopes**.
+
+Also, using correlation and variance analysis, we have narrowed our modelling task from `r dim(dados)[2]` to only `r dim(dados.instrumentos)[2]` features.
+
+
+
+
+
+## Prediction on testing set
+
+Those are the final results:
+
+```{r echo=FALSE}
+kable(resultados, caption="Prediction results")
+```
+
+

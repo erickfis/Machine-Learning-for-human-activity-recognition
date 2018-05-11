@@ -1,0 +1,59 @@
+# Prepare terrain with parallel processing
+
+As pointed out by the mentor on https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-randomForestPerformance.md,
+
+we used parallel processing to speed things up.
+
+Also, we have setted up trainControl pointers as indicated.
+```{r}
+library(parallel)
+library(doParallel)
+library(caret)
+
+cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+registerDoParallel(cluster)
+
+fitControl <- trainControl(method = "cv",
+                           number = 3,
+                           allowParallel = TRUE)
+```
+
+# Cross-validation
+
+To get a measure of accuraccy and for validatting our model,
+we have splitted the training data in two subsets: training, containing 70% of the data, and crossval, containing the other 30%.
+
+```{r}
+# hold out a piece of train data, for CV
+indice.train <- createDataPartition(dados.instrumentos$classe, 
+                                    p =0.7, list = FALSE)
+
+training <- dados.instrumentos[indice.train,]
+crossval <- dados.instrumentos[-indice.train,]
+```
+
+# Model selection
+
+As we see it, this is a classification problem, so we choose between classification models.
+
+We compared some different models and them choosed the best of them in terms of accuracy.
+
+As pointed out on https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-requiredModelAccuracy.md
+
+*Submit your test cases for grading only after you've achieved a model accuracy of at least .99 on the training data set.*
+
+## CART Decision Trees
+
+```{r cart, cache=TRUE}
+#training the model
+modelo.cart <- train(classe ~., training, method = "rpart", 
+                    trControl = fitControl)
+
+# getting cross-validated accuraccy
+valores <- predict(modelo.cart, crossval)
+
+acc <- confusionMatrix(crossval$classe, valores)
+```
+
+This model has accuraccy of `r round(acc$overall[1],3)`. That's not what we need.
+

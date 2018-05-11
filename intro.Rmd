@@ -1,0 +1,26 @@
+# Summary
+
+In this project our goal is to predict, through machine learning techniques, if a weight lifiting exercise is being done properly.
+
+We have data from accelerometers put on the belt, forearm, arm, and dumbbell of six young healthy participants who were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: 
+
+- exactly according to the specification (Class A), 
+- throwing the elbows to the front (Class B), 
+- lifting the dumbbell only halfway (Class C), 
+- lowering the dumbbell only halfway (Class D) 
+- and throwing the hips to the front (Class E).
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes. 
+
+We described how we have built our model, how we used cross validation, what's the expected out of sample error and why we made the choices we did. 
+
+After building a machine learning algorithm, we will also use our prediction model to predict 20 different test cases. This prediction scored 100/100 on Coursera.
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. They have been very generous in allowing their data to be used for this kind of assignment. 
+
+Qualitative Activity Recognition of Weight Lifting Exercises dataset:
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13). Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#wle_paper_section#ixzz4nDBhFq9c
+
+
